@@ -6,6 +6,7 @@ REC_PIDFILE="$STATE_DIR/arecord.pid"
 WORKER_PIDFILE="$STATE_DIR/worker.pid"
 SPINNER_PIDFILE="$STATE_DIR/spinner.pid"
 NOTIFY_IDFILE="$STATE_DIR/notification.id"
+COMMAND_LOCK_DIR="$STATE_DIR/command.lock"
 
 mkdir -p "$STATE_DIR"
 
@@ -135,6 +136,34 @@ clipboard_paste_via_shift_insert() {
 
 notify_init "tiny-dictate" "$NOTIFY_IDFILE"
 
+release_command_lock() {
+    rm -rf "$COMMAND_LOCK_DIR"
+}
+
+acquire_command_lock() {
+    local owner_pid
+
+    if mkdir "$COMMAND_LOCK_DIR" 2>/dev/null; then
+        printf '%s' "$$" > "$COMMAND_LOCK_DIR/pid"
+        trap release_command_lock EXIT
+        return 0
+    fi
+
+    if [ -f "$COMMAND_LOCK_DIR/pid" ]; then
+        owner_pid="$(cat "$COMMAND_LOCK_DIR/pid" 2>/dev/null || true)"
+        if [ -n "$owner_pid" ] && ! kill -0 "$owner_pid" 2>/dev/null; then
+            rm -rf "$COMMAND_LOCK_DIR"
+            if mkdir "$COMMAND_LOCK_DIR" 2>/dev/null; then
+                printf '%s' "$$" > "$COMMAND_LOCK_DIR/pid"
+                trap release_command_lock EXIT
+                return 0
+            fi
+        fi
+    fi
+
+    return 1
+}
+
 is_running_pidfile() {
     local pidfile="$1"
 
@@ -151,6 +180,15 @@ recording_active() {
     fi
 
     rm -f "$REC_PIDFILE"
+    return 1
+}
+
+worker_active() {
+    if is_running_pidfile "$WORKER_PIDFILE"; then
+        return 0
+    fi
+
+    rm -f "$WORKER_PIDFILE"
     return 1
 }
 
@@ -223,6 +261,13 @@ ensure_micro_not_muted() {
 }
 
 start() {
+    # A worker process exists for both recording and transcribing phases.
+    # Refuse to start a second run while one is already active.
+    if worker_active || recording_active; then
+        notify_message "⏳ tiny-dictate is already busy" 1500 || true
+        return 1
+    fi
+
     ensure_micro_not_muted || return 1
 
     rm -f "$REC_FILE"
@@ -278,11 +323,13 @@ start() {
 stop() {
     if recording_active; then
         kill_from_pidfile "$REC_PIDFILE" -INT
+    elif worker_active; then
+        notify_message "⏳ Transcription already in progress" 1500 || true
     fi
 }
 
 cancel() {
-    if ! recording_active; then
+    if ! recording_active && ! worker_active; then
         echo "No recording in progress"
         return 0
     fi
@@ -297,13 +344,15 @@ cancel() {
 toggle() {
     if recording_active; then
         stop
+    elif worker_active; then
+        notify_message "⏳ Transcription already in progress" 1500 || true
     else
         start
     fi
 }
 
 status() {
-    if recording_active || is_running_pidfile "$WORKER_PIDFILE"; then
+    if recording_active || worker_active; then
         echo "working"
     else
         echo "idle"
@@ -358,6 +407,15 @@ while [ "$#" -gt 0 ]; do
     esac
     shift
 done
+
+case "$command" in
+    start|stop|cancel|toggle)
+        if ! acquire_command_lock; then
+            notify_message "⏳ tiny-dictate is already handling another command" 1200 || true
+            exit 1
+        fi
+        ;;
+esac
 
 case "$command" in
     start)
