@@ -1,0 +1,30 @@
+[
+  {
+    "name": "clipboard",
+    "description": "Copy text to clipboard and optionally paste via simulated keystrokes",
+    "version": "1.0.0",
+    "provides": ["transcription_injector"],
+    "dependencies": []
+  },
+  {
+    "name": "elevenlabs",
+    "description": "ElevenLabs Scribe Realtime transcription via WebSocket",
+    "version": "1.0.0",
+    "provides": ["transcription_backend"],
+    "dependencies": ["elevenlabs>=2.59.0"]
+  },
+  {
+    "name": "keyboardtype",
+    "description": "Type transcribed text via simulated keystrokes (wtype/ydotool)",
+    "version": "1.0.0",
+    "provides": ["transcription_injector"],
+    "dependencies": []
+  },
+  {
+    "name": "libnotify",
+    "description": "Desktop notifications via notify-send (libnotify)",
+    "version": "1.0.0",
+    "provides": ["feedback_notifier"],
+    "dependencies": []
+  }
+]

@@ -1,0 +1,12 @@
+[Unit]
+Description=tiny-dictate — voice dictation daemon
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart={{ TINY_DICTATED_BIN }}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

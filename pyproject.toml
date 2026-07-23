@@ -1,0 +1,30 @@
+[project]
+name = "tiny-dictate"
+version = "0.1.0"
+description = "Tiny voice dictation tool for the GNU/Linux desktop"
+readme = "README.md"
+authors = [{ name = "Christophe Benz", email = "christophe.benz@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.5.1",
+    "pydantic>=2.13.4",
+    "pygobject>=3.56.3",
+    "python-dotenv>=1.2.2",
+    "sounddevice>=0.5.1",
+    "xdg-base-dirs>=6.0.2",
+]
+
+[project.scripts]
+tiny-dictate = "tiny_dictate.cli:main"
+tiny-dictated = "tiny_dictate.daemon:main"
+
+[build-system]
+requires = ["uv_build>=0.10.11,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.9", #
+    "pytest>=9.1.1",
+    "ruff>=0.15.22",
+]

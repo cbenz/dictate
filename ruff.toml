@@ -1,0 +1,74 @@
+line-length = 120
+preview = true
+unsafe-fixes = true
+
+[lint]
+exclude = [
+  "__pycache__",
+  ".cache",
+  ".eggs",
+  ".git",
+  ".venv",
+  "*.egg-info",
+  "build",
+  "dist",
+]
+explicit-preview-rules = true
+ignore = [
+  "ANN401",
+  "BLE001",
+  "COM",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D106",
+  "D107",
+  "D203",
+  "D213",
+  "ISC001",
+  "N818",
+  "PD",
+  "PGH003",
+  "S101",
+  "TD002",
+  "TD003",
+  "TD004",
+]
+select = ["ALL", "RUF022"]
+unfixable = ["COM", "ERA", "F841"]
+
+[lint.flake8-bugbear]
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
+# [lint.flake8-builtins]
+# builtins-ignorelist = ["id", "open", "type"]
+
+# [lint.mccabe]
+# max-complexity = 10
+
+[lint.pep8-naming]
+extend-ignore-names = ["test_*"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F403"]
+"local/dev*.py" = [
+  "T201", # allow print
+]
+"src/dbnomics_dashboard/cli.py" = [
+  "FBT001", #
+  "FBT002",
+  "FBT003",
+  "UP007",
+]
+"typings/**/*.pyi" = ["F403"]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.pylint]
+max-args = 16
+# max-branches = 12
+# max-statements = 50
